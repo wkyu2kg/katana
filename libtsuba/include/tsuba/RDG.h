@@ -124,6 +124,18 @@ public:
   katana::Result<void> MarkEdgePropertiesPersistent(
       const std::vector<std::string>& persist_edge_props);
 
+  /// The node properties
+  const std::shared_ptr<arrow::Table>& node_properties() const;
+
+  /// The edge properties
+  const std::shared_ptr<arrow::Table>& edge_properties() const;
+
+  /// Remove all node properties
+  void DropNodeProperties();
+
+  /// Remove all edge properties
+  void DropEdgeProperties();
+
   /// Explain to graph how it is derived from previous version
   void AddLineage(const std::string& command_line);
 
@@ -154,18 +166,6 @@ public:
 
   uint32_t partition_id() const { return partition_id_; }
   void set_partition_id(uint32_t partition_id) { partition_id_ = partition_id; }
-
-  /// The node properties
-  const std::shared_ptr<arrow::Table>& node_properties() const;
-
-  /// The edge properties
-  const std::shared_ptr<arrow::Table>& edge_properties() const;
-
-  /// Remove all node properties
-  void DropNodeProperties();
-
-  /// Remove all edge properties
-  void DropEdgeProperties();
 
   const std::vector<std::shared_ptr<arrow::ChunkedArray>>& master_nodes()
       const {

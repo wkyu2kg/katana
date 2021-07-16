@@ -22,38 +22,26 @@ public:
   bool Equals(const RDGCore& other) const;
 
   katana::Result<void> AddNodeProperties(
-      const std::shared_ptr<arrow::Table>& props);
+      const std::shared_ptr<arrow::Schema>& add_schema);
+
+  katana::Result<void> RemoveNodeProperties(
+      const std::shared_ptr<arrow::Schema>& remove_schema);
+
+  katana::Result<void> SetNodePropertyData(
+      const std::string& name, std::shared_ptr<arrow::Array> prop_arr);
 
   katana::Result<void> AddEdgeProperties(
-      const std::shared_ptr<arrow::Table>& props);
+      const std::shared_ptr<arrow::Schema>& add_schema);
 
-  katana::Result<void> UpsertNodeProperties(
-      const std::shared_ptr<arrow::Table>& props);
+  katana::Result<void> RemoveEdgeProperties(
+      const std::shared_ptr<arrow::Schema>& remove_schema);
 
-  katana::Result<void> UpsertEdgeProperties(
-      const std::shared_ptr<arrow::Table>& props);
-
-  katana::Result<void> RemoveNodeProperty(uint32_t i);
-
-  katana::Result<void> RemoveEdgeProperty(uint32_t i);
+  katana::Result<void> SetEdgePropertyData(
+      const std::string& name, std::shared_ptr<arrow::Array> prop_arr);
 
   //
   // Accessors and Mutators
   //
-
-  const std::shared_ptr<arrow::Table>& node_properties() const {
-    return node_properties_;
-  }
-  void set_node_properties(std::shared_ptr<arrow::Table>&& node_properties) {
-    node_properties_ = std::move(node_properties);
-  }
-
-  const std::shared_ptr<arrow::Table>& edge_properties() const {
-    return edge_properties_;
-  }
-  void set_edge_properties(std::shared_ptr<arrow::Table>&& edge_properties) {
-    edge_properties_ = std::move(edge_properties);
-  }
 
   void drop_node_properties() {
     std::vector<std::shared_ptr<arrow::Array>> empty;
@@ -90,8 +78,14 @@ private:
   // Data
   //
 
-  std::shared_ptr<arrow::Table> node_properties_;
-  std::shared_ptr<arrow::Table> edge_properties_;
+  /// The node and edge schemas are loaded from disk and stay in memory
+  std::shared_ptr<arrow::Table> node_schema_;
+  std::shared_ptr<arrow::Table> edge_schema_;
+
+  /// Property columns are cached in memory.  This vector has the same number of
+  /// entries as the schema.  If the data is absent, there is a nullptr at that index.
+  std::vector<std::shared_ptr<arrow::Array>> node_prop_data_;
+  std::vector<std::shared_ptr<arrow::Array>> edge_prop_data_;
 
   FileView topology_file_storage_;
 

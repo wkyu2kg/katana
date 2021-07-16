@@ -19,8 +19,15 @@ namespace tsuba {
 struct PropStorageInfo {
   std::string name;
   std::string path;
-  bool persist{false};
-  bool written_out{false};
+  //bool persist{false};
+  //bool written_out{false};
+  std::string next_version_path;
+  /// kClean : no writeback needed, if !next_version_path.empty(), data in path, otherwise
+  ///   it is in next_version_path
+  /// kDirty: Writeback needed, next_version_path should only be written once because
+  ///   we can't overwrite an RDG file in place
+  /// kEphemeral: no writeback.  A kEphemeral property never transitions to kDirty
+  enum class State { kClean, kDirty, kEphemeral };
 };
 
 class KATANA_EXPORT RDGPartHeader {
@@ -28,10 +35,6 @@ public:
   static katana::Result<RDGPartHeader> Make(const katana::Uri& partition_path);
 
   katana::Result<void> Validate() const;
-
-  katana::Result<void> PrunePropsTo(
-      const std::vector<std::string>* node_props,
-      const std::vector<std::string>* edge_props);
 
   katana::Result<void> Write(
       RDGHandle handle, WriteGroup* writes,
