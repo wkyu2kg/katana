@@ -2,6 +2,15 @@ import metagraph as mg
 import numpy as np
 import pytest
 
+
+@pytest.mark.xfail(reason="until BFS fix")
+def test_bfs_iter(networkx_weighted_directed_bfs, kg_from_nx_di_bfs):
+    bfs1_nx = mg.algos.traversal.bfs_iter(networkx_weighted_directed_bfs, 0)
+    bfs1_kg = mg.algos.traversal.bfs_iter(kg_from_nx_di_bfs, 0)
+    assert bfs1_kg.tolist() == bfs1_nx.tolist()
+    assert bfs1_kg.tolist() == [0, 3, 4, 5, 6, 2, 7]
+
+
 def test_bfs(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
     bfs1_nx = mg.algos.traversal.bfs_iter(networkx_weighted_directed_8_12, 0)
     bfs2_nx = mg.algos.traversal.bfs_iter(networkx_weighted_directed_8_12, 2)
@@ -13,18 +22,10 @@ def test_bfs(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
     assert bfs2_kg.tolist() == [2, 4, 5, 6, 7]
 
 
-@pytest.mark.xfail(reason="until BFS implementation is fixed.")
-def test_bfs_iter(networkx_weighted_directed_bfs, kg_from_nx_di_bfs):
-    bfs1_nx = mg.algos.traversal.bfs_iter(networkx_weighted_directed_bfs, 0)
-    bfs1_kg = mg.algos.traversal.bfs_iter(kg_from_nx_di_bfs, 0)
-    assert bfs1_kg.tolist() == bfs1_nx.tolist()
-    assert bfs1_kg.tolist() == [0, 3, 4, 5, 6, 2, 7]
-
-
 def test_bfs_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     src_node = 2
     bfs1_kg = mg.algos.traversal.bfs_iter(katanagraph_cleaned_8_12_di, src_node)
     bfs2_kg = mg.algos.traversal.bfs_iter(katanagraph_cleaned_8_12_di, src_node)
@@ -32,7 +33,6 @@ def test_bfs_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
     assert bfs1_kg.tolist() == bfs2_kg.tolist()
     assert len(bfs1_kg.tolist()) > 0
     assert bfs1_kg.tolist() == bfs_nx.tolist()
-
 
 
 def test_sssp_bellman_ford(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
@@ -49,11 +49,10 @@ def test_sssp_bellman_ford(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
     assert distances_nx == distances_kg
 
 
-@pytest.mark.runslow
 def test_sssp_bellman_ford_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     src_node = 0
     sssp1_kg = mg.algos.traversal.bellman_ford(katanagraph_cleaned_8_12_di, src_node)
     sssp2_kg = mg.algos.traversal.bellman_ford(katanagraph_cleaned_8_12_di, src_node)
@@ -78,11 +77,10 @@ def test_sssp_dijkstra(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
     assert distances_nx == distances_kg
 
 
-@pytest.mark.runslow
 def test_sssp_dijkstra_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     src_node = 1
     sssp1_kg = mg.algos.traversal.dijkstra(katanagraph_cleaned_8_12_di, src_node)
     sssp2_kg = mg.algos.traversal.dijkstra(katanagraph_cleaned_8_12_di, src_node)
@@ -101,11 +99,10 @@ def test_connected_components(networkx_weighted_undirected_8_12, kg_from_nx_ud_8
     assert cc_kg == cc_nx
 
 
-@pytest.mark.runslow
 def test_connected_components_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     cc_kg1 = mg.algos.clustering.connected_components(katanagraph_cleaned_8_12_ud)
     cc_kg2 = mg.algos.clustering.connected_components(katanagraph_cleaned_8_12_ud)
     cc_nx = mg.algos.clustering.connected_components(nx_from_kg_ud_8_12)
@@ -121,11 +118,10 @@ def test_pagerank(networkx_weighted_directed_8_12, kg_from_nx_di_8_12):
     assert pr_nx == pr_kg
 
 
-@pytest.mark.runslow
 def test_pagerank_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
-    test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
+    test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs
+    """
     pr_kg1 = mg.algos.centrality.pagerank(katanagraph_cleaned_8_12_di)
     pr_kg2 = mg.algos.centrality.pagerank(katanagraph_cleaned_8_12_di)
     pr_nx = mg.algos.centrality.pagerank(nx_from_kg_di_8_12)
@@ -141,12 +137,11 @@ def test_betweenness_centrality(networkx_weighted_directed_8_12, kg_from_nx_di_8
     assert bc_nx == bc_kg
 
 
-@pytest.mark.runslow
 def test_betweenness_centrality_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
     Notice for large graphs, mg.algos.centrality.betweenness is extremely slow (not because of our translator)
-    '''
+    """
     bc_kg1 = mg.algos.centrality.betweenness(katanagraph_cleaned_8_12_di)
     bc_kg2 = mg.algos.centrality.betweenness(katanagraph_cleaned_8_12_di)
     assert bc_kg1 == bc_kg2
@@ -162,11 +157,10 @@ def test_triangle_counting(networkx_weighted_undirected_8_12, kg_from_nx_ud_8_12
     assert tc_nx == tc_kg
 
 
-@pytest.mark.runslow
 def test_triangle_counting_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     tc_kg1 = mg.algos.clustering.triangle_count(katanagraph_cleaned_8_12_ud)
     tc_kg2 = mg.algos.clustering.triangle_count(katanagraph_cleaned_8_12_ud)
     tc_nx = mg.algos.clustering.triangle_count(nx_from_kg_ud_8_12)
@@ -185,14 +179,13 @@ def test_louvain_community_detection(networkx_weighted_undirected_8_12, kg_from_
     assert lc_nx[1] == lc_kg[1]
 
 
-@pytest.mark.runslow
 def test_louvain_community_detection_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx.
     We cannot expect two consecutive runs with the same source code give the same results.
     The reason is two runs use different random seeds.
     Besides, we cannot set the random seed cause the metagraph wrapper hide that option in network's community_louvain.best_partition function
-    '''
+    """
     lc_kg1 = mg.algos.clustering.louvain_community(katanagraph_cleaned_8_12_ud)
     lc_kg2 = mg.algos.clustering.louvain_community(katanagraph_cleaned_8_12_ud)
     lc_nx = mg.algos.clustering.louvain_community(nx_from_kg_ud_8_12)
@@ -210,11 +203,10 @@ def test_translation_subgraph_extraction(networkx_weighted_directed_8_12, kg_fro
     assert list(se_nx.value.edges(data=True)) == list(se_kg.value.edges(data=True))
 
 
-@pytest.mark.runslow
 def test_translation_subgraph_extraction_kg(katanagraph_cleaned_8_12_di, nx_from_kg_di_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     ids = {0, 4, 5}
     se_kg1 = mg.algos.subgraph.extract_subgraph(katanagraph_cleaned_8_12_di, ids)
     se_kg2 = mg.algos.subgraph.extract_subgraph(katanagraph_cleaned_8_12_di, ids)
@@ -231,11 +223,10 @@ def test_labal_propagation(networkx_weighted_undirected_8_12, kg_from_nx_ud_8_12
     assert cd_nx == cd_kg
 
 
-@pytest.mark.runslow
 def test_labal_propagation_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     cd_kg1 = mg.algos.clustering.label_propagation_community(katanagraph_cleaned_8_12_ud)
     cd_kg2 = mg.algos.clustering.label_propagation_community(katanagraph_cleaned_8_12_ud)
     cd_nx = mg.algos.clustering.label_propagation_community(nx_from_kg_ud_8_12)
@@ -254,11 +245,10 @@ def test_jaccard_similarity(networkx_weighted_undirected_8_12, kg_from_nx_ud_8_1
     assert jcd_kg[compare_node] == 1
 
 
-@pytest.mark.runslow
 def test_jaccard_similarity_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     compare_node = 3
     prop_name = "jaccard_prop_with_" + str(compare_node)
     jcd_kg1 = mg.algos.traversal.jaccard(katanagraph_cleaned_8_12_ud, compare_node)
@@ -282,11 +272,10 @@ def test_local_clustering_coefficient(networkx_weighted_undirected_8_12, kg_from
     assert not np.any(np.isnan(lcc_kg))
 
 
-@pytest.mark.runslow
 def test_local_clustering_coefficient_kg(katanagraph_cleaned_8_12_ud, nx_from_kg_ud_8_12):
-    '''
+    """
     test for katana graph which is directly loaded rather than translated from nettworkx, also test two consecutive runs with the same source code
-    '''
+    """
     prop_name = "output_prop"
     lcc_kg1 = mg.algos.clustering.local_clustering_coefficient(katanagraph_cleaned_8_12_ud, prop_name)
     lcc_kg2 = mg.algos.clustering.local_clustering_coefficient(katanagraph_cleaned_8_12_ud, prop_name)

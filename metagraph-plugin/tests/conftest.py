@@ -1,4 +1,5 @@
 import io
+
 import metagraph as mg
 import numpy as np
 import pandas as pd
@@ -11,12 +12,45 @@ from katana.example_data import get_rdg_dataset
 from katana.local import Graph
 from katana.local.import_data import from_csr
 
+katana.local.initialize()
+
+data_8_12 = """
+Source,Destination,Weight
+0,1,4
+0,3,2
+0,4,7
+1,3,3
+1,4,5
+2,4,5
+2,5,2
+2,6,8
+3,4,1
+4,7,4
+5,6,4
+5,7,6
+"""
+
+
+data_8_11 = """
+Source,Destination,Weight
+0,3,1
+1,0,2
+1,4,3
+2,4,4
+2,5,5
+2,7,6
+3,4,8
+4,5,9
+5,6,10
+6,2,11
+"""
+
 
 # Currently Graph does not support undirected graphs
 # we are using directed graphs with symmetric edges to denote undirected graphs.
 @pytest.fixture(autouse=True)
 def pg_rmat15_cleaned_symmetric():
-    katana.local.initialize()
+    #    katana.local.initialize()
     pg = Graph(get_rdg_dataset("rmat15_cleaned_symmetric"))
     return pg
 
@@ -30,7 +64,7 @@ def katanagraph_rmat15_cleaned_di(pg_rmat15_cleaned_symmetric):
 @pytest.fixture(autouse=True)
 def katanagraph_rmat15_cleaned_ud(pg_rmat15_cleaned_symmetric):
     katana_graph = mg.wrappers.Graph.KatanaGraph(
-        pg_rmat15_cleaned_symmetric, is_weighted=True, edge_weight_prop_name="value", is_directed=False
+        pg_rmat15_cleaned_symmetric, is_weighted=True, edge_weight_prop_name="value", is_directed=False,
     )
     return katana_graph
 
@@ -39,7 +73,7 @@ def gen_pg_cleaned_8_12_from_csr(is_directed):
     """
     A helper function for the test, generating Katana's Graph from an edge list
     """
-    katana.local.initialize()
+    #    katana.local.initialize()
     elist_raw = [
         (0, 1, 4),
         (0, 3, 2),
@@ -61,7 +95,7 @@ def gen_pg_cleaned_8_12_from_csr(is_directed):
     if is_directed:
         elist = sorted(elist_raw, key=lambda each: (each[0], each[1]))
     else:
-        inv_elist = [(each[1], each[0], each[2]) for each in elist_raw]
+        inv_elist = [(each[1], each[0], each[2]) for each in elist_raw if each[0] != each[1]]
         elist = sorted(elist_raw + inv_elist, key=lambda each: (each[0], each[1]))
     nlist = sorted(nlist_raw, key=lambda each: each)
     # build the CSR format from the edge list (weight, (src, dst))
@@ -88,14 +122,15 @@ def katanagraph_cleaned_8_12_di():
 def katanagraph_cleaned_8_12_ud():
     pg_cleaned_8_12_from_csr_ud = gen_pg_cleaned_8_12_from_csr(is_directed=False)
     katana_graph = mg.wrappers.Graph.KatanaGraph(
-        pg_cleaned_8_12_from_csr_ud, is_weighted=True, edge_weight_prop_name="value", is_directed=False
+        pg_cleaned_8_12_from_csr_ud, is_weighted=True, edge_weight_prop_name="value", is_directed=False,
     )
     return katana_graph
 
 
 @pytest.fixture(autouse=True)
 def networkx_weighted_undirected_8_12():
-    df = pd.read_csv("tests/data/edge1.csv")
+    csv_file = io.StringIO(data_8_12)
+    df = pd.read_csv(csv_file)
     em = mg.wrappers.EdgeMap.PandasEdgeMap(df, "Source", "Destination", "Weight", is_directed=False)
     graph1 = mg.algos.util.graph.build(em)
     return graph1
@@ -103,7 +138,8 @@ def networkx_weighted_undirected_8_12():
 
 @pytest.fixture(autouse=True)
 def networkx_weighted_directed_8_12():
-    df = pd.read_csv("tests/data/edge1.csv")
+    csv_file = io.StringIO(data_8_12)
+    df = pd.read_csv(csv_file)
     em = mg.wrappers.EdgeMap.PandasEdgeMap(df, "Source", "Destination", "Weight", is_directed=True)
     graph1 = mg.algos.util.graph.build(em)
     return graph1
@@ -111,41 +147,24 @@ def networkx_weighted_directed_8_12():
 
 @pytest.fixture(autouse=True)
 def networkx_weighted_directed_bfs():
-    data = """
-Source,Destination,Weight
-0,3,1
-1,0,2
-1,4,3
-2,4,4
-2,5,5
-2,7,6
-3,4,8
-4,5,9
-5,6,10
-6,2,11
-"""
-    csv_file = io.StringIO(data)
+    csv_file = io.StringIO(data_8_11)
     df = pd.read_csv(csv_file)
-    em = mg.wrappers.EdgeMap.PandasEdgeMap(
-        df, "Source", "Destination", "Weight", is_directed=True
-    )
+    em = mg.wrappers.EdgeMap.PandasEdgeMap(df, "Source", "Destination", "Weight", is_directed=True)
     graph1 = mg.algos.util.graph.build(em)
     return graph1
 
 
 # directed graph
 @pytest.fixture(autouse=True)
-def kg_from_nx_di_8_12(networkx_weighted_directed_8_12):
-    pg_test_case = mg.translate(networkx_weighted_directed_8_12, mg.wrappers.Graph.KatanaGraph)
+def kg_from_nx_di_bfs(networkx_weighted_directed_bfs):
+    pg_test_case = mg.translate(networkx_weighted_directed_bfs, mg.wrappers.Graph.KatanaGraph)
     return pg_test_case
 
 
 # directed graph
 @pytest.fixture(autouse=True)
-def kg_from_nx_di_bfs(networkx_weighted_directed_bfs):
-    pg_test_case = mg.translate(
-        networkx_weighted_directed_bfs, mg.wrappers.Graph.KatanaGraph
-    )
+def kg_from_nx_di_8_12(networkx_weighted_directed_8_12):
+    pg_test_case = mg.translate(networkx_weighted_directed_8_12, mg.wrappers.Graph.KatanaGraph)
     return pg_test_case
 
 
@@ -164,12 +183,3 @@ def nx_from_kg_di_8_12(katanagraph_cleaned_8_12_di):
 @pytest.fixture(autouse=True)
 def nx_from_kg_ud_8_12(katanagraph_cleaned_8_12_ud):
     return mg.translate(katanagraph_cleaned_8_12_ud, mg.wrappers.Graph.NetworkXGraph)
-
-
-def pytest_addoption(parser):
-    parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
-
-
-def pytest_runtest_setup(item):
-    if "runslow" in item.keywords and not item.config.getoption("--runslow"):
-        pytest.skip("need --runslow option to run this test")

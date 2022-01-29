@@ -18,10 +18,11 @@ def has_node_prop(kg, node_prop_name):
             return True
     return False
 
+
 # breadth-first search,
 @concrete_algorithm("traversal.bfs_iter")
 def kg_bfs_iter(graph: KatanaGraph, source_node: NodeID, depth_limit: int) -> NumpyVectorType:
-    '''
+    """
     .. py:function:: metagraph.algos.traversal.bfs_iter(graph, source_node, depth_limit)
 
     Use BFS to traverse a graph given a source node and BFS depth limit (implemented by a Katana Graph API)
@@ -31,17 +32,24 @@ def kg_bfs_iter(graph: KatanaGraph, source_node: NodeID, depth_limit: int) -> Nu
     :param int depth: The BFS depth
     :return: the BFS traversal result in order
     :rtype: NumpyVectorType
-    '''
+    """
+    g = graph.value
+    edges = [(src, dest) for src in g for dest in [g.get_edge_dest(e) for e in g.edge_ids(src)]]
+    edge_weights = g.get_edge_property(graph.edge_weight_prop_name).to_pandas()
     bfs_prop_name = "bfs_prop_start_from_" + str(source_node)
-    depth_limit_internal = 2**30 - 1 if depth_limit == -1 else depth_limit # return all the reachable nodes for the default value of depth_limit (-1)
+    depth_limit_internal = (
+        2 ** 30 - 1 if depth_limit == -1 else depth_limit
+    )  # return all the reachable nodes for the default value of depth_limit (-1)
     start_node = source_node
     if not has_node_prop(graph.value, bfs_prop_name):
         bfs(graph.value, start_node, bfs_prop_name)
+    bfs_list_1st = graph.value.get_node_property(bfs_prop_name).to_numpy()
     pg_bfs_list = graph.value.get_node_property(bfs_prop_name).to_pandas().values.tolist()
     new_list = [[i, pg_bfs_list[i]] for i in range(len(pg_bfs_list)) if pg_bfs_list[i] < depth_limit_internal]
     sorted_list = sorted(new_list, key=lambda each: (each[1], each[0]))
     bfs_arr = np.array([each[0] for each in sorted_list])
     return bfs_arr
+
 
 # TODO(pengfei):
 # single-source shortest path
@@ -56,7 +64,7 @@ def kg_bfs_iter(graph: KatanaGraph, source_node: NodeID, depth_limit: int) -> Nu
 
 @abstract_algorithm("traversal.jaccard")
 def jaccard_similarity(
-    graph: Graph(is_directed=False, edge_type="map", edge_dtype={"int", "float"}, edge_has_negative_weights=False),
+    graph: Graph(is_directed=False, edge_type="map", edge_dtype={"int", "float"}, edge_has_negative_weights=False,),
     compare_node: NodeID,
 ) -> Vector:
     pass
@@ -73,7 +81,7 @@ def jaccard_similarity_kg(graph: KatanaGraph, compare_node: NodeID) -> NumpyVect
 
 @abstract_algorithm("clustering.local_clustering_coefficient")
 def local_clustering(
-    graph: Graph(is_directed=False, edge_type="map", edge_dtype={"int", "float"}, edge_has_negative_weights=False),
+    graph: Graph(is_directed=False, edge_type="map", edge_dtype={"int", "float"}, edge_has_negative_weights=False,),
     prop_name: str = "output",
 ) -> Vector:
     pass
